@@ -9,7 +9,7 @@ struct list_head *q_new()
 {
     struct list_head *p = malloc(sizeof(struct list_head));
 
-    if (p != NULL)
+    if (!p)
         return p;
     return NULL;
 }
