@@ -7,11 +7,11 @@
 /* Create an empty queue */
 struct list_head *q_new()
 {
-    struct list_head *p = malloc(sizeof(struct list_head));
-
-    if (!p)
-        return p;
-    return NULL;
+    struct list_head *q = malloc(sizeof(struct list_head));
+    if (!q)
+        return NULL;
+    INIT_LIST_HEAD(q);
+    return q;
 }
 
 /* Free all storage used by queue */
