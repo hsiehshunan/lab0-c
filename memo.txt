@@ -1,0 +1,35 @@
+In the function bool 
+
+q_insert_head(struct list_head *head, char *s)
+{
+    element_t *new = malloc(sizeof(element_t));
+    new->value = strdup(s);  
+    
+    INIT_LIST_HEAD(&new->list);
+    list_add(new, head);
+    
+    return true;
+}
+
+// Should I use new->value = s or,
+// Should I use new->value = strdup(s)
+// Assume we need to change the content of s, 
+// I choose strdup(s) to avoid the pollution of original content.
+
+//Same for q_insert_tail. 
+
+element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
+{
+    if(!head) return NULL;
+    element_t *prev = list_first_entry(head, element_t, list);
+    list_del(&prev->list);
+    strncpy(sp, prev->value, bufsize);
+    sp[bufsize-1] = '\0';
+    return prev;
+}
+
+//At first, I only think of "strcpy". After I type str, strcpy and strncpy pop up at the same time. 
+//I checked the parameter, strncpy has one more size_t parameter, which fits the parameter in q_remove_head. 
+//I guess I need to use strncpy instead of strcpy
+
+//However, I have no idea when exactly to use strcpy or strncpy. 
