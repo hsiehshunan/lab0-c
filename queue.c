@@ -4,18 +4,37 @@
 
 #include "queue.h"
 
+/*helper function to free an element*/
+static void q_release_element(element_t *e)
+{
+    if(!e) return;
+    free(e->value);
+    free(e);
+}
+
 /* Create an empty queue */
 struct list_head *q_new()
 {
     struct list_head *q = malloc(sizeof(struct list_head));
-    if (!q)
+    if (!q) //Check if malloc is successful or not. 
         return NULL;
     INIT_LIST_HEAD(q);
     return q;
 }
 
 /* Free all storage used by queue */
-void q_free(struct list_head *head) {}
+void q_free(struct list_head *head) {
+    if(!head) return;
+
+    struct list_head *node, *safe;
+    list_for_each_safe(node,safe,head){
+        element_t *f_node = list_entry(node, element_t, list);
+        free(f_node);
+    }
+    free(head);
+
+
+}
 
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
@@ -83,6 +102,15 @@ int q_size(struct list_head *head)
 /* Delete the middle node in queue */
 bool q_delete_mid(struct list_head *head)
 {
+    if(!head) return false;
+    struct list_head *fast ;
+    struct list_head *slow ;
+    for(fast = head->next  ; fast != slow ; slow = slow->next)
+    {
+        fast = fast->next->next;
+    }
+    list_del(slow);
+    free(slow);
     // https://leetcode.com/problems/delete-the-middle-node-of-a-linked-list/
     return true;
 }
@@ -90,6 +118,9 @@ bool q_delete_mid(struct list_head *head)
 /* Delete all nodes that have duplicate string */
 bool q_delete_dup(struct list_head *head)
 {
+    if(!head || list_empty(head)) return NULL;
+    element_t *cur, *next;
+    
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
     return true;
 }
