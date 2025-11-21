@@ -4,8 +4,6 @@
 
 #include "queue.h"
 
-
-
 /* Create an empty queue */
 struct list_head *q_new()
 {
@@ -20,7 +18,7 @@ void q_free(struct list_head *head) {
     if(!head) return;// nothing to free. 
 
     element_t *pos, *next;
-    list_for_each_entry_safe(pos,next,head, list){
+    list_for_each_entry_safe(pos, next, head, list){
         list_del(&pos->list);
         q_release_element(pos);
     }
@@ -74,13 +72,13 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
     if(!head) return NULL; // nothing to remove
-    element_t *back = list_last_entry(head, element_t, list);
-    list_del(&back->list);
+    element_t *tail = list_last_entry(head, element_t, list);
+    list_del(&tail->list);
     if(bufsize > 0 ){ // make sure bifsize > 0 to avoid bufsize - 1 < 0
-        strncpy(sp, back->value, bufsize-1);
+        strncpy(sp, tail->value, bufsize-1);
         sp[bufsize-1] = '\0'; 
     }
-    return back;
+    return tail;
 }
 
 /* Return number of elements in queue */
@@ -97,9 +95,10 @@ int q_size(struct list_head *head)
 
 /* Delete the middle node in queue */
 bool q_delete_mid(struct list_head *head)
-{
-    if(!head || list_empty(head) ) return false;  // to handle NULL, empty node
-    if(list_is_singular(head)) { // to handle one single node.
+{   // to handle NULL, empty node
+    if(!head || list_empty(head) ) return false;  
+    // to handle one single node.
+    if(list_is_singular(head)) { 
         struct list_head *node_list = head->next;
         element_t *node = list_entry(node_list, element_t,list);
         list_del(node_list);
@@ -181,11 +180,54 @@ void q_swap(struct list_head *head)
 }
 
 /* Reverse elements in queue */
-void q_reverse(struct list_head *head) {}
+void q_reverse(struct list_head *head) {
+    if(!head || list_empty(head) || list_is_singular(head)) return;
+    
+    struct list_head new_head;                   // create and initialize a new head.
+    INIT_LIST_HEAD(&new_head);
+
+    while(!list_empty(head)){                   // check wheter the old list's head is empty
+        struct list_head *tail = head->prev;    // take the last node of the old list
+        list_move_tail(tail,&new_head);          // add the last node from old list to tail of new list.  
+    }
+    list_splice(&new_head, head);               // list_splice(reversed list, empty list) is result
+}
 
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)
 {
+    if(!head || list_empty(head) || list_is_singular(head)) return;
+    if(k < 2) return;
+
+    int count = q_size(head)/k ; //Count the numnber of group that we need to reverse.
+    if(count == 0) return;
+    struct list_head *group_list ;
+    group_list = head;
+
+    while(count--)
+    {
+        struct list_head tmp;
+        INIT_LIST_HEAD(&tmp);    //create and initialize empty list
+
+         /* Move k nodes after group_prev into tmp, reversing their order */
+        for(int i = 0; i < k; i++)
+        {
+            struct list_head *node = group_list->next;  // always the first node in the remaining group
+            list_move(node, &tmp);  // append the node to the new list c, b, a, say k = 3
+        }
+        /* Now tmp contains the k nodes in reversed order.
+         * Splice them back after group_prev.
+         */
+        list_splice_init(&tmp,group_list);
+        
+        /* Advance group_prev to the end of this reversed group
+         * (k steps forward).
+         */
+        for(int i = 0 ; i < k; i++){
+            group_list = group_list->next;
+        }
+    }
+
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
 
@@ -196,6 +238,10 @@ void q_sort(struct list_head *head, bool descend) {}
  * the right side of it */
 int q_ascend(struct list_head *head)
 {
+    if(!head || list_empty(head)) return 0;
+    if(list_is_singular(head)) return 1;
+    struct list_head *prev1 = head->prev, *prev2 = head->prev;
+    
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
     return 0;
 }
