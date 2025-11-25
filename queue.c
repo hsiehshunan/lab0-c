@@ -29,7 +29,8 @@ void q_free(struct list_head *head) {
 bool q_insert_head(struct list_head *head, char *s)
 {
     if(!head) return false;
-    if(!s) return false; // nothing to add
+    if(!s) return false; 
+
     element_t *node = malloc(sizeof(element_t));
     if (!node) return false;
     node->value = strdup(s);
@@ -49,6 +50,7 @@ bool q_insert_tail(struct list_head *head, char *s)
     node->value = strdup(s);
     INIT_LIST_HEAD(&node->list);
     list_add_tail(&node->list, head);
+
     return true;
 }
 
@@ -76,6 +78,7 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
     
     element_t *tail = list_last_entry(head, element_t, list);
     list_del(&tail->list);
+    
     if(bufsize > 0 ){ // make sure bifsize > 0 to avoid bufsize - 1 < 0
         strncpy(sp, tail->value, bufsize-1);
         sp[bufsize-1] = '\0'; 
@@ -349,7 +352,7 @@ int q_merge_two(struct list_head *l1, struct list_head *l2, bool descend)
 
     while (n2 != l2){
         struct list_head *next = n2->next;
-        list_move_head(n2, &merged);
+        list_move_tail(n2, &merged);
         n2 = next;
     }
     INIT_LIST_HEAD(l1);
@@ -362,14 +365,46 @@ int q_merge_two(struct list_head *l1, struct list_head *l2, bool descend)
 
 int q_merge(struct list_head *head, bool descend)
 {
-    bool descend = (descend != 0);  // if ascend then 0 if descend 1.
+    descend = (descend != 0);  // if ascend then 0 if descend 1.
     if(!head || list_empty(head)) return 0;
     // https://leetcode.com/problems/merge-k-sorted-lists/
 
+    if(list_is_singular(head)){
+        queue_contex_t *ctx = list_entry(head, queue_contex_t, chain);
+        return ctx->size;
+    }
+    /* More than one context:
+     * use the first one as accumulator (ctx0)
+     */
+    queue_contex_t *ctx0 = list_entry(head->next, queue_contex_t, chain);
+
+    struct list_head *acc = ctx0->q;
+
+    int total = ctx0->size ; 
+    
+    struct list_head *pos;
+
+    for(pos = ctx0->chain.next ; pos != head; pos = pos->next){
+        queue_contex_t *ctx = list_entry(pos, queue_contex_t, chain);
 
 
+        /* Skip if this context's queue is NULL or empty */
+        if (!ctx->q || list_empty(ctx->q))
+            continue;
+        total = q_merge_two(acc, ctx->q, descend);
 
-    return 0;
+                /* After merging:
+         *  - acc holds all elements from previous queues + ctx->q
+         *  - ctx->q is empty
+         * Update sizes accordingly.
+         */
+        ctx0->size = total;
+        ctx->size  = 0;
+    }
+    
+
+
+    return total;
 }
 
 
