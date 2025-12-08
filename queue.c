@@ -129,7 +129,7 @@ bool q_delete_mid(struct list_head *head)
 bool q_delete_dup(struct list_head *head)
 {
     if(!head || list_empty(head) ) return false;  //  handle NULL, empty node
-    if(list_is_singular(head)) {return true;} //  handle one single node.
+    if(list_is_singular(head)) return true; //  handle one single node.
 
     struct list_head *curr = head->next;
 
@@ -213,8 +213,7 @@ void q_reverseK(struct list_head *head, int k)
         INIT_LIST_HEAD(&tmp);    //create and initialize empty list
 
          /* Move k nodes after group_prev into tmp, reversing their order */
-        for(int i = 0; i < k; i++)
-        {
+        for(int i = 0; i < k; i++){
             struct list_head *node = group_list->next;  // always the first node in the remaining group
             list_move(node, &tmp);  // append the node to the new list c, b, a, say k = 3
         }
