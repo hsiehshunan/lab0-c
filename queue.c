@@ -104,8 +104,7 @@ bool q_delete_mid(struct list_head *head)
     if(!head || list_empty(head) ) return false;  
     
     // to handle one single node.
-    if(list_is_singular(head)) 
-    { 
+    if(list_is_singular(head)) { 
         struct list_head *node_list = head->next;
         element_t *node = list_entry(node_list, element_t,list);
         list_del(node_list);
@@ -116,8 +115,7 @@ bool q_delete_mid(struct list_head *head)
     //to handle two or more nodes. 
     struct list_head *front = head->next ;
     struct list_head *rear = head->prev;
-    while( front->next != rear && front != rear)
-    {
+    while( front->next != rear && front != rear){
         front = front ->next; rear = rear->prev;
     }
     element_t * node = list_entry(rear, element_t, list);
@@ -167,8 +165,7 @@ void q_swap(struct list_head *head)
     struct list_head *node2;
     struct list_head *temp;
     for(node1 = head->next, node2 = head->next->next; node1 != head && node2 != head;
-    node1 = node1->next, node2 = node1->next)
-    {
+    node1 = node1->next, node2 = node1->next){
         temp->next = node1->next;
         temp->prev = node1->prev;
         
@@ -211,8 +208,7 @@ void q_reverseK(struct list_head *head, int k)
     struct list_head *group_list ;
     group_list = head;
 
-    while(count--)
-    {
+    while(count--){
         struct list_head tmp;
         INIT_LIST_HEAD(&tmp);    //create and initialize empty list
 
