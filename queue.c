@@ -232,7 +232,38 @@ void q_reverseK(struct list_head *head, int k)
 
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
+static struct list_head *merge_two_sorted_list(struct list_head *a, struct list_head *b, bool descend)
+{
+    if(!a) return b;
+    if(!b) return a;
 
+    struct list_head *head;
+    struct list_head **tail = &head;
+
+    while(1 && b){
+        element_t *ea = list_entry(a, element_t, list);
+        element_t *eb = list_entry(b, element_t, list);
+        int cmp = strcmp(ea->value, eb->value);
+
+        bool take_a = descend ? (cmp>=0):(cmp<0);
+
+        if(take_a){
+            struct list_head *next = a->next;
+            a->next = NULL;
+            *tail = a;
+            tail = &a->next;
+            a = next;
+        }else{
+            struct list_head *next = b->next;
+            b->next = NULL;
+            *tail = b;
+            tail = &b->next;
+            b = next;
+        }
+    }   
+    *tail = a ? a : b;
+    return head;
+}
 /* Sort elements of queue in ascending/descending order */
 void q_sort(struct list_head *head, bool descend) 
 {
