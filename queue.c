@@ -234,7 +234,64 @@ void q_reverseK(struct list_head *head, int k)
 }
 
 /* Sort elements of queue in ascending/descending order */
-void q_sort(struct list_head *head, bool descend) {}
+void q_sort(struct list_head *head, bool descend) 
+{
+    struct list_head *list;
+    struct list_head *part[65];
+    int level;
+
+    /* 0 或 1 個節點，不用排 */
+    if (!head || list_empty(head) || list_is_singular(head))
+        return;
+
+    /* 取出原本 list 的第一個與最後一個節點 */
+    struct list_head *first = head->next;
+    struct list_head *last  = head->prev;
+
+    last->next = NULL; // turn doubly linked list to singly linked list
+    list = first;
+
+    /* initialize head to empty list   */
+    INIT_LIST_HEAD(head);
+
+    memset(part, 0, sizeof(part)); // initialize part to NULL
+
+    while (list) {
+        struct list_head *curr = list;
+        struct list_head *next = list->next;
+
+        curr->next = NULL;
+        curr->prev = NULL;
+
+        list = next;
+
+
+        for (level = 0; part[level]; level++) {
+            curr = merge_two_sorted_list(descend, part[level], curr);
+            part[level] = NULL;
+        }
+        part[level] = curr;
+    }
+    list = NULL;
+    for (level = 0;
+         level < (int) (sizeof(part) / sizeof(part[0]));
+         level++) {
+        if (!part[level])
+            continue;
+        list = merge_two_sorted_list(descend, part[level], list);
+    }
+
+    /* list now is 
+     *   n1 → n2 → ... → nk → NULL
+     *
+     * turn back to doubly linked list
+     */
+    while (list) {
+        struct list_head *next = list->next;
+        list_add_tail(list, head);
+        list = next;
+    }
+}
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
@@ -392,10 +449,49 @@ int q_merge(struct list_head *head, bool descend)
         ctx0->size = total;
         ctx->size  = 0;
     }
-    
-
 
     return total;
 }
+
+// a helper function for merge_two_sorted_list for q_sort
+
+static struct list_head *merge_two_sorted_list(struct list_head *a, struct list_head *b, bool descend)
+{
+    if(!a) return b;
+    if(!b) return a;
+
+    struct list_head *head;
+    struct list_head **tail = &head;
+
+    while(1 && b){
+        element_t *ea = list_entry(a, element_t, list);
+        element_t *eb = list_entry(b, element_t, list);
+        int cmp = strcmp(ea->value, eb->value);
+
+        bool take_a = descend ? (cmp>=0):(cmp<0);
+
+        if(take_a){
+            struct list_head *next = a->next;
+            a->next = NULL;
+            *tail = a;
+            tail = &a->next;
+            a = next;
+        }else{
+            struct list_head *next = b->next;
+            b->next = NULL;
+            *tail = b;
+            tail = &b->next;
+            b = next;
+        }
+    }   
+    *tail = a ? a : b;
+
+    return head;
+}
+
+
+
+
+
 
 
