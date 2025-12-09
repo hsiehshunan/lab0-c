@@ -159,24 +159,16 @@ bool q_delete_dup(struct list_head *head)
 /* Swap every two adjacent nodes */
 void q_swap(struct list_head *head)
 {
-    if(!head || list_empty(head)) return NULL;
-    if(list_is_singular(head)) return ;
-    struct list_head *node1;
-    struct list_head *node2;
-    struct list_head *temp;
-    for(node1 = head->next, node2 = head->next->next; node1 != head && node2 != head;
-    node1 = node1->next, node2 = node1->next){
-        temp->next = node1->next;
-        temp->prev = node1->prev;
-        
-        node1->next = node2->next;  
-        node2->next->prev = node1;  
-        
-        node1->prev = node2; 
-        node2->next = node1;  
-        
-        temp->prev->next = node2;
-        node2->prev = temp->prev;
+    if(!head || list_empty(head) || list_is_singular(head)) return;
+    struct list_head *node = head->next;
+
+    while(node != head && node->next !=head){
+        struct list_head *first = node;
+        struct list_head *second = node->next;
+
+        node = second->next;
+        list_del(first);
+        list_add(first, second);
     }
 
 
@@ -232,20 +224,22 @@ void q_reverseK(struct list_head *head, int k)
 
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
+
+// a helper function for merge_two_sorted_list for q_sort
 static struct list_head *merge_two_sorted_list(struct list_head *a, struct list_head *b, bool descend)
 {
     if(!a) return b;
     if(!b) return a;
 
-    struct list_head *head;
+    struct list_head *head = NULL;
     struct list_head **tail = &head;
 
-    while(1 && b){
+    while(a && b){
         element_t *ea = list_entry(a, element_t, list);
         element_t *eb = list_entry(b, element_t, list);
         int cmp = strcmp(ea->value, eb->value);
 
-        bool take_a = descend ? (cmp>=0):(cmp<0);
+        bool take_a = descend ? (cmp>=0):(cmp<=0);
 
         if(take_a){
             struct list_head *next = a->next;
@@ -298,7 +292,7 @@ void q_sort(struct list_head *head, bool descend)
 
 
         for (level = 0; part[level]; level++) {
-            curr = merge_two_sorted_list(descend, part[level], curr);
+            curr = merge_two_sorted_list(part[level], curr, descend);
             part[level] = NULL;
         }
         part[level] = curr;
@@ -309,7 +303,7 @@ void q_sort(struct list_head *head, bool descend)
          level++) {
         if (!part[level])
             continue;
-        list = merge_two_sorted_list(descend, part[level], list);
+        list = merge_two_sorted_list(part[level], list, descend);
     }
 
     /* list now is 
@@ -331,26 +325,24 @@ int q_ascend(struct list_head *head)
     if(!head || list_empty(head)) return 0;
     if(list_is_singular(head)) return 1;
     
-    
-    
-    struct list_head *node, *safe;
-    element_t *e;
-    char *max_value;
-    e = list_entry(head->next, element_t, list);
-    max_value = e->value;
-    // check the max greater than all, if yes, move to next node and assign it to the max and repeat the behavior to the end. 
-    list_for_each_safe(node, safe,head){ 
-        e = list_entry(node, element_t, list);
+    struct list_head *node = head->prev;
+    element_t *e = list_entry(node, element_t, list);
+    char *min_value = e->value;
 
-        if(strcmp(e->value, max_value) < 0){
+    node = node->prev; //start from the second last.
+    
+    while(node != head){
+        struct list_head *prev = node->prev;
+        element_t *cur = list_entry(node, element_t,list);
+
+        if(strcmp(cur->value, min_value) > 0){
             list_del(node);
-            q_release_element(node);
+            q_release_element(cur);
         }else{
-            max_value = e->value;
+            min_value = cur->value;
         }
+        node = prev;
     }
-    
-
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
     return 1;
 }
@@ -362,22 +354,23 @@ int q_descend(struct list_head *head)
     if(!head || list_empty(head)) return 0;
     if(list_is_singular(head)) return 1;
 
-    struct list_head *node, *safe;
-    element_t *e;
-    char *min_value;
-    e = list_entry(head->next, element_t, list);
-    min_value = e->value;
-    // check the min less than all, if yes, move to next node and assign it to the min and repeat the behavior to the end. 
-    list_for_each_safe(node, safe,head){ 
-        e = list_entry(node, element_t, list);
+    struct list_head *node = head->prev;
+    element_t *e = list_entry(node,element_t,list);
+    char *max_value = e->value;
+    node = node->prev;
 
-        if(strcmp(e->value, min_value) > 0){
+    while(node != head){
+        struct list_head *prev = node->prev;
+        element_t *cur = list_entry(node, element_t,list);
+
+        if(strcmp(cur->value, max_value) < 0){
             list_del(node);
-            q_release_element(node);
+            q_release_element(cur);
         }else{
-            min_value = e->value;
+            max_value = cur->value;
         }
-    }
+        node = prev;
+    } 
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
     return 1;
 }
@@ -449,13 +442,13 @@ int q_merge(struct list_head *head, bool descend)
     // https://leetcode.com/problems/merge-k-sorted-lists/
 
     if(list_is_singular(head)){
-        queue_contex_t *ctx = list_entry(head, queue_contex_t, chain);
+        queue_contex_t *ctx = list_first_entry(head, queue_contex_t, chain);
         return ctx->size;
     }
     /* More than one context:
      * use the first one as accumulator (ctx0)
      */
-    queue_contex_t *ctx0 = list_entry(head->next, queue_contex_t, chain);
+    queue_contex_t *ctx0 = list_first_entry(head, queue_contex_t, chain);
 
     struct list_head *acc = ctx0->q;
 
@@ -483,44 +476,6 @@ int q_merge(struct list_head *head, bool descend)
 
     return total;
 }
-
-// a helper function for merge_two_sorted_list for q_sort
-
-static struct list_head *merge_two_sorted_list(struct list_head *a, struct list_head *b, bool descend)
-{
-    if(!a) return b;
-    if(!b) return a;
-
-    struct list_head *head;
-    struct list_head **tail = &head;
-
-    while(1 && b){
-        element_t *ea = list_entry(a, element_t, list);
-        element_t *eb = list_entry(b, element_t, list);
-        int cmp = strcmp(ea->value, eb->value);
-
-        bool take_a = descend ? (cmp>=0):(cmp<0);
-
-        if(take_a){
-            struct list_head *next = a->next;
-            a->next = NULL;
-            *tail = a;
-            tail = &a->next;
-            a = next;
-        }else{
-            struct list_head *next = b->next;
-            b->next = NULL;
-            *tail = b;
-            tail = &b->next;
-            b = next;
-        }
-    }   
-    *tail = a ? a : b;
-
-    return head;
-}
-
-
 
 
 
