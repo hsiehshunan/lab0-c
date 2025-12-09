@@ -243,7 +243,7 @@ int q_ascend(struct list_head *head)
     if(!head || list_empty(head)) return 0;
     if(list_is_singular(head)) return 1;
     
-    q_reverse(head);  // 1, 2, 3, 4, 5, 6, 7  --> 7, 6, 5, 4, 3, 2, 1, 
+    
     
     struct list_head *node, *safe;
     element_t *e;
@@ -261,7 +261,7 @@ int q_ascend(struct list_head *head)
             max_value = e->value;
         }
     }
-    q_reverse(head);
+    
 
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
     return 1;
@@ -274,8 +274,6 @@ int q_descend(struct list_head *head)
     if(!head || list_empty(head)) return 0;
     if(list_is_singular(head)) return 1;
 
-    q_reverse(head);  //7, 6, 5, 4, 3, 2, 1  -> 1, 2, 3, 4, 5, 6, 7
-    
     struct list_head *node, *safe;
     element_t *e;
     char *min_value;
@@ -292,8 +290,6 @@ int q_descend(struct list_head *head)
             min_value = e->value;
         }
     }
-    q_reverse(head);
-
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
     return 1;
 }
